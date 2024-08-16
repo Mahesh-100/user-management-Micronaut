@@ -5,6 +5,7 @@ import io.micronaut.serde.annotation.Serdeable
 
 @Introspected
 @Serdeable
+
 class User {
 
    String name

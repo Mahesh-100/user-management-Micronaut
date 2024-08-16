@@ -1,7 +1,9 @@
 package com.amzur.controller
 
+import com.amzur.dto.request.UserRequest
 import com.amzur.entity.User
 import com.amzur.service.UserService
+import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Delete
@@ -10,7 +12,10 @@ import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
 import io.micronaut.http.annotation.QueryValue
+import io.micronaut.http.annotation.Status
 import jakarta.inject.Inject
+
+import javax.validation.Valid
 
 
 @Controller('/users')
@@ -24,16 +29,13 @@ class UserController {
 //    }
 
    @Post
-    def addUser(@Body User user){
-        return "user ID: ${userService.addUser(user)}"
+   @Status(HttpStatus.CREATED)
+    def addUser(@Valid @Body UserRequest userRequest){
+        return "user ID: ${userService.addUser(userRequest)}"
     }
    @Delete
     def removeUser(@QueryValue  int userId){
-        if(userService.removeUser(userId)){
-            return "successfully Removed user"
-        }else{
-            return "User not Found"
-        }
+       return  userService.removeUser(userId)
     }
     @Get
     def getAllUsers(){
@@ -42,11 +44,6 @@ class UserController {
 
     @Put("/{userId}")
     def updateUser(@PathVariable int userId, @Body User user) {
-        if(userService.updateUser(userId, user)){
-            return "Successfully updated"
-
-        } else{
-            return  "User not Found"
-        }
+        return userService.updateUser(userId, user)
     }
 }
