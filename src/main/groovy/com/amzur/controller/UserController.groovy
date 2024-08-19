@@ -33,8 +33,8 @@ class UserController {
     def addUser(@Valid @Body UserRequest userRequest){
         return "user ID: ${userService.addUser(userRequest)}"
     }
-   @Delete
-    def removeUser(@QueryValue  int userId){
+   @Delete("/{userId}")
+    def removeUser(@PathVariable  int userId){
        return  userService.removeUser(userId)
     }
     @Get
@@ -42,8 +42,13 @@ class UserController {
         return userService.getAllUsers()
     }
 
+
     @Put("/{userId}")
     def updateUser(@PathVariable int userId, @Body User user) {
         return userService.updateUser(userId, user)
+    }
+    @Get("/{userId}")
+    def getEmail(@PathVariable int userId){
+        return userService.getEmail(userId)
     }
 }

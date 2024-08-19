@@ -22,6 +22,7 @@ class CustomGlobalExceptionHandler {
         return HttpResponse.status(HttpStatus.BAD_REQUEST).body(errors)
     }
 
+
     @Error(global = true, exception = UserNotFound)
     HttpResponse<ErrorResponse> handleLoginUser(UserNotFound ex) {
         ErrorResponse errorResponse = new ErrorResponse(

@@ -1,5 +1,6 @@
 package com.amzur.service
 
+import com.amzur.constants.ApplicationConstants
 import com.amzur.dto.request.UserRequest
 import com.amzur.entity.User
 import com.amzur.handlers.UserNotFound
@@ -21,11 +22,12 @@ class UserService {
         return userId
     }
     def removeUser(int userId){
-        if (users.containsKey(userId)) {   // Check if the userId exists
+        if (users.get(userId))
+        {   // Check if the userId exists
             users.remove(userId)           // Remove the user
-            return true                    // Return true if user was removed
+            return "Successfully Removed"                   // Return true if user was removed
         }else{
-            throw new UserNotFound("User Not Found")
+            throw new UserNotFound(ApplicationConstants.USER_NOT_FOUND)
         }
 
     }
@@ -38,9 +40,18 @@ class UserService {
             users[userId] = updatedUser
             return true
         }else{
-            throw new UserNotFound("User Not Found")
+            throw new UserNotFound(ApplicationConstants.USER_NOT_FOUND)
         }
 
     }
+    def getEmail(int userId){
+        if(users.containsKey(userId)){
+            return users[userId].email
+        }else{
+            throw new UserNotFound("User with ID $userId not found")
+        }
+    }
+
+
 
 }
