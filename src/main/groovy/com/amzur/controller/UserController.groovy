@@ -2,6 +2,7 @@ package com.amzur.controller
 
 import com.amzur.dto.request.UserRequest
 import com.amzur.entity.User
+
 import com.amzur.service.UserService
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
@@ -11,18 +12,20 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
-import io.micronaut.http.annotation.QueryValue
+
 import io.micronaut.http.annotation.Status
+import io.micronaut.validation.Validated
 import jakarta.inject.Inject
 
 import javax.validation.Valid
 
-
+@Validated
 @Controller('/users')
 class UserController {
 
     @Inject
     UserService userService
+
 
 //    UserController(UserService userService) {
 //        this.userService = userService
@@ -31,6 +34,8 @@ class UserController {
    @Post
    @Status(HttpStatus.CREATED)
     def addUser(@Valid @Body UserRequest userRequest){
+
+
         return "user ID: ${userService.addUser(userRequest)}"
     }
    @Delete("/{userId}")

@@ -29,4 +29,15 @@ class UserRequest {
     @NotEmpty(message = "Address should not be empty")
     String address
 
+
+    @Override
+     String toString() {
+        return "UserRequest{" +
+                "name='" + name + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", address='" + address + '\'' +
+                '}';
+    }
 }
