@@ -7,14 +7,15 @@ import io.micronaut.serde.annotation.Serdeable
 @Serdeable
 
 class User {
-
+    Long id
    String name
     String email
     String password
     String phoneNumber
     String address
 
-    User(String name, String address, String phoneNumber, String password, String email) {
+    User( Long id,String name, String address, String phoneNumber, String password, String email) {
+        this.id=id
         this.name = name
         this.address = address
         this.phoneNumber = phoneNumber
@@ -24,6 +25,6 @@ class User {
 
     @Override
      String toString() {
-        return "User{ name= $name , email=$email , password=$password ,phoneNumber= $phoneNumber ,address=$address }"
+        return "User{ id=$id,name= $name , email=$email , password=$password ,phoneNumber= $phoneNumber ,address=$address }"
     }
 }

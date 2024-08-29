@@ -2,8 +2,10 @@ package com.amzur.controller
 
 import com.amzur.dto.request.UserRequest
 import com.amzur.entity.User
-
+import com.amzur.service.MessageProducer
 import com.amzur.service.UserService
+import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -14,31 +16,60 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
 
 import io.micronaut.http.annotation.Status
-import io.micronaut.validation.Validated
+
+import io.micronaut.http.client.HttpClient
+import io.micronaut.http.client.annotation.Client
+import io.micronaut.scheduling.annotation.ExecuteOn
+import io.micronaut.scheduling.TaskExecutors
 import jakarta.inject.Inject
 
-import javax.validation.Valid
 
-@Validated
 @Controller('/users')
 class UserController {
 
     @Inject
     UserService userService
+    @Inject
+    MessageProducer messageProducer
 
+
+    @Inject
+    @Client("http://localhost:8082") // URL of the second microservice
+    HttpClient httpClient
 
 //    UserController(UserService userService) {
 //        this.userService = userService
 //    }
+    @ExecuteOn(TaskExecutors.BLOCKING)
+    @Post
+    @Status(HttpStatus.CREATED)
+    def createUser(@Body UserRequest userRequest) {
+        try {
+            // Send the UserRequest to the other microservice and receive the saved user object
+            HttpResponse<User> response = httpClient.toBlocking().exchange(
+                    HttpRequest.POST("/user-process", userRequest),
+                    User
+            )
 
-   @Post
-   @Status(HttpStatus.CREATED)
-    def addUser(@Valid @Body UserRequest userRequest){
+            // Check if the response is OK and contains the saved user object
+            if (response.status == HttpStatus.CREATED && response.body()) {
+                User savedUser = response.body()
 
-
-        return "user ID: ${userService.addUser(userRequest)}"
+                // Send the saved user object via Kafka
+                if (messageProducer.sendMessage(savedUser)) {
+                    return HttpResponse.ok("Sent user object successfully through Kafka")
+                } else {
+                    return HttpResponse.serverError("Unable to send user object through Kafka")
+                }
+            } else {
+                return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
+            }
+        } catch (Exception e) {
+            return HttpResponse.serverError("An error occurred: ${e.message}")
+        }
     }
-   @Delete("/{userId}")
+
+    @Delete("/{userId}")
     def removeUser(@PathVariable  int userId){
        return  userService.removeUser(userId)
     }
