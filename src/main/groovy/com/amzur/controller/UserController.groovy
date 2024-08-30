@@ -11,6 +11,7 @@ import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Delete
 import io.micronaut.http.annotation.Get
+import io.micronaut.http.annotation.Options
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
@@ -40,23 +41,30 @@ class UserController {
 //    UserController(UserService userService) {
 //        this.userService = userService
 //    }
+
+//    @Options
+//    HttpResponse<?> options() {
+//        return HttpResponse.ok()
+//                .header("Access-Control-Allow-Origin", "*")
+//                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+//                .header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With")
+//    }
+
     @ExecuteOn(TaskExecutors.BLOCKING)
     @Post
     @Status(HttpStatus.CREATED)
     def createUser(@Body UserRequest userRequest) {
         try {
-            // Send the UserRequest to the other microservice and receive the saved user object
+            // Send the UserRequest to the other microservice
             HttpResponse<User> response = httpClient.toBlocking().exchange(
                     HttpRequest.POST("/user-process", userRequest),
                     User
             )
 
-            // Check if the response is OK and contains the saved user object
-            if (response.status == HttpStatus.CREATED && response.body()) {
-                User savedUser = response.body()
-
-                // Send the saved user object via Kafka
-                if (messageProducer.sendMessage(savedUser)) {
+            // Check if the request was successful
+            if (response.status == HttpStatus.CREATED  && response.body()) {
+                // Send the response user object through Kafka
+                if (messageProducer.sendMessage(response.body())) {
                     return HttpResponse.ok("Sent user object successfully through Kafka")
                 } else {
                     return HttpResponse.serverError("Unable to send user object through Kafka")
