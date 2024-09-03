@@ -112,7 +112,24 @@ class UserController {
         }
     }
 
+    @ExecuteOn(TaskExecutors.BLOCKING)
+    @Delete("/delete/{userId}")
+    @Status(HttpStatus.NO_CONTENT)
+    def removeUser(@PathVariable int userId) {
+        try{
+        HttpResponse<Void> response = httpClient.toBlocking().exchange(
+                HttpRequest.DELETE("/user-process/delete/${userId}")
+        )
 
+        if (response.status == HttpStatus.NO_CONTENT) {
+            return HttpResponse.noContent() // Return 204 No Content for successful DELETE
+        }else {
+            return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
+        }
+    }catch(Exception e){
+            return HttpResponse.serverError("An error occurred: ${e.message}")
+        }
+    }
 
 
 
