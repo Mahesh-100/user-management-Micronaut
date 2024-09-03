@@ -38,17 +38,7 @@ class UserController {
     @Client("http://localhost:8083") // URL of the second microservice
     HttpClient httpClient
 
-//    UserController(UserService userService) {
-//        this.userService = userService
-//    }
 
-//    @Options
-//    HttpResponse<?> options() {
-//        return HttpResponse.ok()
-//                .header("Access-Control-Allow-Origin", "*")
-//                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-//                .header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Requested-With")
-//    }
 
     @ExecuteOn(TaskExecutors.BLOCKING)
     @Post
@@ -62,21 +52,39 @@ class UserController {
             )
 
             // Check if the request was successful
-            if (response.status == HttpStatus.CREATED  && response.body()) {
-                // Send the response user object through Kafka
-                if (messageProducer.sendMessage(response.body())) {
-                    return HttpResponse.ok(response.body())
-                } else {
-                    return HttpResponse.serverError("Unable to send user object through Kafka")
-                }
-            } else {
-                return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
-            }
+            return handleResponse(response)
         } catch (Exception e) {
             return HttpResponse.serverError("An error occurred: ${e.message}")
         }
     }
 
+
+    @ExecuteOn(TaskExecutors.BLOCKING)
+    @Put("/update/{userId}")
+    @Status(HttpStatus.CREATED)
+    def updateUser(@PathVariable int userId, @Body UserRequest userRequest) {
+        try {
+            // Send the UserRequest to the other microservice
+            HttpResponse<User> response = httpClient.toBlocking().exchange(
+                    HttpRequest.PUT("/user-process/update/${userId}", userRequest),
+                    User
+            )
+
+            // Check if the request was successful
+            return handleResponse(response)
+        } catch (Exception e) {
+            return HttpResponse.serverError("An error occurred: ${e.message}")
+        }
+    }
+
+    private def handleResponse(HttpResponse<User> response) {
+        if (response.status == HttpStatus.CREATED && response.body()) {
+            return messageProducer.sendMessage(response.body()) ?
+                    HttpResponse.ok(response.body()) :
+                    HttpResponse.serverError("Unable to send user object through Kafka")
+        }
+        return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
+    }
     @ExecuteOn(TaskExecutors.BLOCKING)
     @Post("/login")
     @Status(HttpStatus.OK)
@@ -118,10 +126,7 @@ class UserController {
 //    }
 //
 //
-//    @Put("/{userId}")
-//    def updateUser(@PathVariable int userId, @Body User user) {
-//        return userService.updateUser(userId, user)
-//    }
+
 //    @Get("/{userId}")
 //    def getEmail(@PathVariable int userId){
 //        return userService.getEmail(userId)
