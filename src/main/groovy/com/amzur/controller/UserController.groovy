@@ -10,8 +10,7 @@ import io.micronaut.http.HttpStatus
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Delete
-import io.micronaut.http.annotation.Get
-import io.micronaut.http.annotation.Options
+
 import io.micronaut.http.annotation.PathVariable
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.annotation.Put
@@ -122,7 +121,8 @@ class UserController {
         )
 
         if (response.status == HttpStatus.NO_CONTENT) {
-            return HttpResponse.noContent() // Return 204 No Content for successful DELETE
+            return HttpResponse.noContent() // Return 204 No Content for successful DEL
+
         }else {
             return HttpResponse.status(response.status).body("Failed to process user request in the other microservice")
         }
